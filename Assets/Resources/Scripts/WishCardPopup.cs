@@ -18,6 +18,8 @@ public class WishCardPopup : MonoBehaviour {
         {
             m_selectedBtn.UnselectBtn();
         }
+
+        m_selectedBtn = null;
     }
 
     public void SetSelectedBtn(WishCardBtn selectBtn)
@@ -34,6 +36,10 @@ public class WishCardPopup : MonoBehaviour {
 
     public void UnselectBtn()
     {
+        if (m_selectedBtn != null)
+        {
+            m_selectedBtn.UnselectBtn();
+        }
         m_selectedBtn = null;
         m_selectValue = "";
     }

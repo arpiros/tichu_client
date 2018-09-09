@@ -10,7 +10,8 @@ public enum RutineState
     SecondDivisionState,
     ExchangeState,
     RoundState,
-    RoundEndState
+    RoundEndState,
+    CardMoveState,
 }
 
 public class GameManager : MonoBehaviour {
@@ -63,6 +64,7 @@ public class GameManager : MonoBehaviour {
     public ScoreBoard m_scoreBoardPopup;
     public WishCardPopup m_wishCardPopup;
     public GivePointPopup m_givePointPopup;
+    public GameObject m_askMultiPopup;
 
     public bool m_endRound = false;
 
@@ -74,6 +76,7 @@ public class GameManager : MonoBehaviour {
     bool m_isExchange = false;
     bool m_isAllReady = false;
     bool m_isClosePointPopup = false;
+    bool m_isMultiPlay = false;
 
     int m_nTeamAPoint = 0;
     int m_nTeamBPoint = 0;
@@ -180,8 +183,38 @@ public class GameManager : MonoBehaviour {
         StartCoroutine("TichuRoutine");
     }
 
+    IEnumerator WaitSelectMulti()
+    {
+        m_askMultiPopup.SetActive(true);
+
+        while (m_askMultiPopup.activeSelf)
+        {
+            yield return null;
+        }
+    }
+
+    public void SelectPlayMulti()
+    {
+        m_isMultiPlay = true;
+        m_askMultiPopup.SetActive(false);
+    }
+
+    public void CancelPlayMulti()
+    {
+        m_isMultiPlay = false;
+        m_askMultiPopup.SetActive(false);
+    }
+
     IEnumerator TichuRoutine()
     {
+        //메인 루틴 들어가기 전에 멀티 할지를 물어보자.
+        yield return StartCoroutine(WaitSelectMulti());
+
+        if (m_isMultiPlay)
+        {
+            yield break;
+        }
+
         //다시 생각을 해보자.
         //일단 순서도 흐름대로 만들다.
         //1. 카드 분배 (8장 분배)
@@ -700,8 +733,12 @@ public class GameManager : MonoBehaviour {
             //스코어 보드에 점수를 더해준다.
             int teamAAddPoint = 200 + m_players[0].GetBonusPoint() + m_players[2].GetBonusPoint();
 
+            m_players[1].SuccesFirst(false);
+            m_players[3].SuccesFirst(false);
+
             //A팀이 먼저 2명이 났음
             m_nTeamAPoint = m_nTeamAPoint + 200 + m_players[0].GetBonusPoint() + m_players[2].GetBonusPoint();
+            m_nTeamBPoint = m_nTeamBPoint + m_players[1].GetBonusPoint() + m_players[3].GetBonusPoint();
 
             m_scoreBoardPopup.AddPoint(teamAAddPoint, m_nTeamAPoint, 0, m_nTeamBPoint);
 
@@ -713,14 +750,19 @@ public class GameManager : MonoBehaviour {
             //스코어 보드에 점수를 더해준다.
             int teamBAddPoint = 200 + m_players[0].GetBonusPoint() + m_players[2].GetBonusPoint();
 
+            m_players[0].SuccesFirst(false);
+            m_players[2].SuccesFirst(false);
+
             //B팀이 먼저 2명이 났음
             m_nTeamBPoint = m_nTeamBPoint + 200 + m_players[1].GetBonusPoint() + m_players[3].GetBonusPoint();
+            m_nTeamAPoint = m_nTeamAPoint + m_players[0].GetBonusPoint() + m_players[2].GetBonusPoint();
 
             m_scoreBoardPopup.AddPoint(0, m_nTeamAPoint, teamBAddPoint, m_nTeamBPoint);
 
             m_endRound = true;
             result = true;
-        }else if (m_teamFlag[0] + m_teamFlag[1] == 3)
+        }
+        else if (m_teamFlag[0] + m_teamFlag[1] == 3)
         {
             //일단 한팀이 2명이 난게 아니다.
             //그럼 한명만 남은 상황인지 확인을 해보자.
@@ -737,6 +779,8 @@ public class GameManager : MonoBehaviour {
                 {
                     //이놈이 꼴지다.
                     //1등에서 점수를 주고
+                    //티츄 성공 여부를 확인해주자,.
+                    m_players[i].SuccesFirst(false);
                     m_firstPlayer.GivePoint(m_players[i].GetPoint());
                     m_players[i].SetPoint(0);
                     

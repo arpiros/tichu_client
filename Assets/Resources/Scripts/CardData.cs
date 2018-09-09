@@ -242,6 +242,11 @@ public class CardData : MonoBehaviour
             return;
         }
 
+        if (GameManager.Instance.rutine == RutineState.CardMoveState)
+        {
+            return;
+        }
+
         float downTime = Time.time;
         
         if (GameManager.Instance.rutine == RutineState.RoundState)

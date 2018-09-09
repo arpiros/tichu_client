@@ -26,8 +26,6 @@ public class SelectCard : MonoBehaviour {
         m_selectedCard.Add(card);
         SetDrawCardType();
 
-        //m_selectedCard.Sort(delegate (CardData a, CardData b) { return a.value.CompareTo(b.value); });
-
         m_selectedCard.Sort(delegate (CardData a, CardData b)
         {
             if (a.value == b.value)
@@ -115,6 +113,8 @@ public class SelectCard : MonoBehaviour {
 
     public IEnumerator CardDrawMove(List<Vector3> endPosList, float totalTime = 0.5f)
     {
+        GameManager.Instance.rutine = RutineState.CardMoveState;
+
         if (m_bHavePhoenix)
         {
             CardData phoenixCard = m_selectedCard.Find(item => item.type == CARD_TYPE.PHOENIX);
@@ -162,6 +162,8 @@ public class SelectCard : MonoBehaviour {
 
             m_selectedCard[i].transform.position = startPos[i] + (moveVec * 1);
         }
+
+        GameManager.Instance.rutine = RutineState.RoundState;
     }
 
     public void SetDrawCardType()

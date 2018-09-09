@@ -463,27 +463,6 @@ public class OtherPlayer : Player {
 
             yield return StartCoroutine(m_selectedCard.CardDrawMove(endPosList));
 
-            //for (int i = 0; i < selectedCardList.Count; ++i)
-            //{
-            //    selectedCardList[i].Hide(false);
-            //    //selectedCardList[i].transform.position = CardDrawHandler.Instance.transform.position + CardDrawHandler.Instance.transform.right * (offset * 70);
-            //    //selectedCardList[i].transform.position = new Vector3(selectedCardList[i].transform.position.x + (GameManager.Instance.RoundTurn * offsetX),
-            //    //                                                    selectedCardList[i].transform.position.y + (GameManager.Instance.RoundTurn * offsetY),
-            //    //                                                    CardDrawHandler.Instance.GetDepth());
-
-            //    selectedCardList[i].transform.position = CardDrawHandler.Instance.transform.position + CardDrawHandler.Instance.transform.right * (offset * 70);
-            //    selectedCardList[i].transform.position = new Vector3(selectedCardList[i].transform.position.x + offsetX,
-            //                                                        selectedCardList[i].transform.position.y + offsetY,
-            //                                                        0);
-            //    selectedCardList[i].transform.rotation = CardDrawHandler.Instance.transform.rotation;
-
-            //    temp += selectedCardList[i].value + " ";
-
-            //    ++offset;
-
-            //    m_myCard.Remove(selectedCardList[i]);
-            //}
-
             Debug.Log(temp);
 
             m_selectedCard.Init();
@@ -511,7 +490,7 @@ public class OtherPlayer : Player {
         {
             int luckNum = Random.Range(0, 10);
 
-            if (luckNum > 9)
+            if (luckNum > 8)
             {
                 m_isCallTichu = true;
 

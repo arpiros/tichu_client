@@ -21,7 +21,6 @@ public class Player : MonoBehaviour {
     public int offsetX;
     public int offsetY;
 
-    protected bool m_isMajjong;             //참새를 냈는지 확인
     protected bool m_isCallTichu;
     protected bool m_isCallLargeTichu;
 
@@ -46,7 +45,6 @@ public class Player : MonoBehaviour {
     protected bool m_bIsExchange = false;
     protected bool m_bDrawMajjong = false;
     protected bool m_bIsMyTurn = false;
-
     protected bool m_bHavePhoenix = false;
 
     protected Player m_leftPlayer;
@@ -89,6 +87,7 @@ public class Player : MonoBehaviour {
     {
         if (m_bombCard.Count > 0 || m_strightBomCard.Count > 0)
         {
+            m_bIsDraw = true;
             //폭탄이 있다.
             if (m_bombCard.Count > 0)
             {
@@ -118,7 +117,7 @@ public class Player : MonoBehaviour {
 
     private void Awake()
     {
-        m_isCallTichu = m_isCallLargeTichu = m_isMajjong = false;
+        m_isCallTichu = m_isCallLargeTichu = false;
         m_point = 0;
         m_bonusPoint = 0;
         m_pointText.text = name + "\n" + m_point.ToString();
@@ -138,7 +137,7 @@ public class Player : MonoBehaviour {
 
     public void InitPlayerInfo()
     {
-        m_isCallTichu = m_isCallLargeTichu = m_isMajjong = false;
+        m_isCallTichu = m_isCallLargeTichu = false;
         m_point = 0;
         m_bonusPoint = 0;
         m_pointText.text = name + "\n" + m_point.ToString();
@@ -219,7 +218,7 @@ public class Player : MonoBehaviour {
 
     public void RoundSet()
     {
-        m_isCallTichu = m_isCallLargeTichu = m_isMajjong = false;
+        m_isCallTichu = m_isCallLargeTichu = false;
         m_point = 0;
         m_pointText.text = name + "\n" + m_point.ToString();
         m_scoreBoardPointText.text = m_pointText.text;
@@ -227,16 +226,9 @@ public class Player : MonoBehaviour {
 
     public void AddCard(CardData cardData)
     {
-        //cardData.transform.position = transform.position;
-        //cardData.transform.rotation = transform.rotation;
-
         m_myCard.Add(cardData);
 
-        if (cardData.type == CARD_TYPE.MAHJONG)
-        {
-            m_isMajjong = true;
-        }
-        else if (cardData.type == CARD_TYPE.PHOENIX)
+        if (cardData.type == CARD_TYPE.PHOENIX)
         {
             m_bHavePhoenix = true;
         }
@@ -296,11 +288,6 @@ public class Player : MonoBehaviour {
         m_leftPlayer = left;
         m_teamPlayer = team;
         m_rightPlayer = right;
-    }
-
-    public bool GetStarter()
-    {
-        return m_isMajjong;
     }
 
     public void AddSelectedCard(CardData card)
@@ -519,7 +506,17 @@ public class Player : MonoBehaviour {
         //리스트가 비어있으면 체크할 필요가 없다.
         if (size <= 0)
         {
-            GameManager.Instance.SetActivePlayBtn(false);
+            //내가 처음이다?
+            if (CardDrawHandler.Instance.GetDrawCardType() == DRAWCARD_TYPE.NONE)
+            {
+                GameManager.Instance.SetActivePlayBtn(true);
+                GameManager.Instance.m_drawBtn.Inactive();
+            }
+            else
+            {
+                GameManager.Instance.SetActivePlayBtn(false);
+                GameManager.Instance.m_passBtn.Active();
+            }
             return false;
         }
 
@@ -590,7 +587,7 @@ public class Player : MonoBehaviour {
         if (m_bIsDraw)
         {
             //카드를 내면 티츄를 포기하게 된다.
-            if (GameManager.Instance.m_tichuBtn.IsActive())
+            if (!GameManager.Instance.m_tichuBtn.IsActive())
             {
                 //GameManager.Instance.m_tichuBtn.gameObject.SetActive(false);
                 GameManager.Instance.m_tichuBtn.Inactive();
@@ -648,25 +645,6 @@ public class Player : MonoBehaviour {
             }
 
             yield return StartCoroutine(m_selectedCard.CardDrawMove(endPosList));
-
-            ////내 카드 목록에서 빼주자.
-            //for (int i = 0; i < selectedCardList.Count; ++i)
-            //{
-            //    //selectedCardList[i].transform.position = CardDrawHandler.Instance.transform.position + CardDrawHandler.Instance.transform.right * (offset * 70);
-            //    //selectedCardList[i].transform.position = new Vector3(selectedCardList[i].transform.position.x + (GameManager.Instance.RoundTurn * offsetX),
-            //    //                                                    selectedCardList[i].transform.position.y + (GameManager.Instance.RoundTurn * offsetY),
-            //    //                                                    CardDrawHandler.Instance.GetDepth());
-            //    selectedCardList[i].transform.position = CardDrawHandler.Instance.transform.position + CardDrawHandler.Instance.transform.right * (offset * 70);
-            //    selectedCardList[i].transform.position = new Vector3(selectedCardList[i].transform.position.x + offsetX,
-            //                                                        selectedCardList[i].transform.position.y + offsetY,
-            //                                                        0);
-            //    selectedCardList[i].transform.rotation = CardDrawHandler.Instance.transform.rotation;
-
-            //    temp += selectedCardList[i].value + " ";
-
-            //    ++offset;
-            //    m_myCard.Remove(selectedCardList[i]);
-            //}
 
             Debug.Log(temp);
 
@@ -728,17 +706,18 @@ public class Player : MonoBehaviour {
 
     virtual public void MyTurn()
     {
-        if (CardDrawHandler.Instance.GetDrawCardType() == DRAWCARD_TYPE.NONE)
-        {
-            //NONE인 경우 아무것도 안 나왔다.
-            //패스를 비활성화 시켜주자.
-            //GameManager.Instance.m_passBtn.SetActive(false);
-        }
-
-        //GameManager.Instance.m_bombBtn.gameObject.SetActive(CheckBomb());
-
-        GameManager.Instance.m_drawBtn.Active();
-        GameManager.Instance.m_passBtn.Active();
+        //if (CardDrawHandler.Instance.GetDrawCardType() == DRAWCARD_TYPE.NONE)
+        //{
+        //    //NONE인 경우 아무것도 안 나왔다.
+        //    //제출을 생성하고 그레이 처리를 해주자.
+        //    GameManager.Instance.SetActivePlayBtn(true);
+        //    GameManager.Instance.m_drawBtn.Inactive();
+        //}
+        //else
+        //{
+        //    GameManager.Instance.m_drawBtn.Active();
+        //    GameManager.Instance.m_passBtn.Active();
+        //}
 
         m_bIsMyTurn = true;
         m_bDrawMajjong = false;
@@ -918,7 +897,6 @@ public class Player : MonoBehaviour {
         {
             m_point += cardDrawList[i].point;
 
-            //cardDrawList[i].Hide();
             cardDrawList[i].gameObject.SetActive(false);
         }
 
@@ -930,8 +908,6 @@ public class Player : MonoBehaviour {
     {
         m_pointText.text = name + "\n" + m_point.ToString();
         m_scoreBoardPointText.text = m_pointText.text;
-
-        //(m_point > 0) ? m_pointText.color = new Color(0, 0, 0) : m_pointText.color = new Color(255, 0, 0);
 
         if (m_point >= 0)
         {
@@ -1012,6 +988,10 @@ public class Player : MonoBehaviour {
 
     virtual protected IEnumerator AnimationClip()
     {
+        if (m_rotateTurnImage.gameObject.activeSelf)
+        {
+            yield break;
+        }
         //애니메이션 클립을 활성화 하고
         //종료 될때까지 계속 회전 시킨다.
         m_rotateTurnImage.gameObject.SetActive(true);
@@ -1077,12 +1057,12 @@ public class Player : MonoBehaviour {
 
             for (int j = i + 1; j < m_myCard.Count; ++j)
             {
-                if (start.value == m_myCard[j].value)
+                if (start.value + m_strightBomCard.Count - 1 == m_myCard[j].value)
                 {
                     continue;
                 }
 
-                if (start.value + 1 == m_myCard[j].value)
+                if (start.value + m_strightBomCard.Count == m_myCard[j].value)
                 {
                     if (start.color == m_myCard[j].color)
                     {
@@ -1097,6 +1077,11 @@ public class Player : MonoBehaviour {
                 else
                 {
                     break;
+
+                    //if (start.value + m_strightBomCard.Count < m_myCard[i].value)
+                    //{
+                    //    break;
+                    //}
                 }
             }
         }
@@ -1323,7 +1308,6 @@ public class Player : MonoBehaviour {
                                 }
                             }
                         }
-
                     }
 
                     //볼짱 다 봤는데도 리턴이 안된경우면 없다고 판단
