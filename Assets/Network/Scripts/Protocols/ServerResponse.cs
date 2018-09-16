@@ -1,14 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Protocol
 {
+    public enum Response
+    {
+        
+    }
     public class BaseResp
     {
-        public int code = 0;
-        public string error;
-
+        [JsonProperty("rt")]
+        public int ResponseType;
     }
 }
 

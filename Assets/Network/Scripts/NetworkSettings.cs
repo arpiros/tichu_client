@@ -5,8 +5,8 @@ using UnityEngine;
 //[CreateAssetMenu(fileName = "NetworkSettings", menuName = "NetworkSettings", order = 1)]
 public class NetworkSettings : ScriptableObject
 {
-    public string LocalURL = "http://localhost:25620";
-    public string DevBaseURL = "http://ec2-13-209-6-26.ap-northeast-2.compute.amazonaws.com:25620";
+    public string LocalURL = "ws://localhost:5555";
+    public string DevBaseURL = "ws://ec2-13-209-6-26.ap-northeast-2.compute.amazonaws.com:5555";
 
     public enum ServerTargets
     {
