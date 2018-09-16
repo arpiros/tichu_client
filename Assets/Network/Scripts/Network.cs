@@ -34,9 +34,8 @@ public class Network : MonoBehaviour {
     } 
     
     // Use this for initialization
-    private void Start () 
-    {
-        
+    void Start () 
+    {    
     }
     
     // Update is called once per frame

@@ -18,7 +18,7 @@ namespace Protocol
 	}
 	public class BaseReq
 	{
-		[JsonProperty("pt")]
+		[JsonProperty("req_t")]
 		public int protocolType;
 	}
 
