@@ -7,11 +7,17 @@ namespace Protocol
 {
     public enum Response
     {
-        
+        CreateRoom = 0,
+        JoinRoom,
+        RoomInit,
+        CallLargeTichu,
+        DistributeAllCard,
+        StartGame,
+        CallTichu,
     }
     public class BaseResp
     {
-        [JsonProperty("rt")]
+        [JsonProperty("resp_t")]
         public int ResponseType;
     }
 }
