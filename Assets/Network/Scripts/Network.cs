@@ -71,6 +71,21 @@ public class Network : MonoBehaviour {
 
         switch ((Protocol.Response)resp.ResponseType)
         {
+            case Protocol.Response.CreateRoom:
+                break;
+            case Protocol.Response.JoinRoom:
+                break;
+            case Protocol.Response.RoomInit:
+                break;
+            case Protocol.Response.CallLargeTichu:
+                break;
+            case Protocol.Response.DistributeAllCard:
+                break;
+            case Protocol.Response.StartGame:
+                break;
+            case Protocol.Response.CallTichu:
+                break;
+                
             default:
                 Debug.Log(e.Data);
                 break;
