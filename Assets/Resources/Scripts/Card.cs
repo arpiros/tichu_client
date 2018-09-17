@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
+using Newtonsoft.Json;
 
 public enum CardType
 {
@@ -29,9 +31,12 @@ public class Card : MonoBehaviour {
     public Image m_obverseImage;
     public Image m_backImage;
 
-    int m_nCardValue;
-    CardType m_eCardType;
-    CardColor m_eCardColor;
+    [JsonProperty("number")]
+    public int m_nCardValue;
+    [JsonProperty("cardType")]
+    public CardType m_eCardType;
+    [JsonProperty("color")]
+    public CardColor m_eCardColor;
 
     public Card()
     {
