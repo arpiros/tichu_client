@@ -2,13 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Protocol;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using WebSocketSharp;
 
-public class Network : MonoBehaviour {
+public class Network : MonoBehaviour
+{
     #region sigleton & lifecycle
+
     private static Network s_Instance = null;
+
     public static Network Instance
     {
         get
@@ -20,27 +23,70 @@ public class Network : MonoBehaviour {
 
                 DontDestroyOnLoad(go);
             }
+
             return s_Instance;
         }
     }
+
     #endregion
-    
+
     private WebSocket ws;
 
-    public bool IsConnect
-    {
-        get; 
-        private set;
-    } 
-    
+    public bool IsConnect { get; private set; }
+
+    private bool mRunningQueue = false;
+    private bool isQuitting = false;
+    Queue<string> responseQueue = new Queue<string>();
+
     // Use this for initialization
-    void Start () 
-    {    
+    void Start()
+    {
+        mRunningQueue = true;
     }
-    
+
     // Update is called once per frame
     void Update()
     {
+        if (mRunningQueue && IsConnect)
+        {
+            StartCoroutine(ResponseQueueWorker());
+        }
+    }
+
+    IEnumerator ResponseQueueWorker()
+    {
+        while (!isQuitting)
+        {
+            if (responseQueue.Count > 0)
+            {
+                string respStr = responseQueue.Peek();
+                var resp = JsonConvert.DeserializeObject<Protocol.BaseResp>(respStr);
+                switch ((Protocol.Response) resp.ResponseType)
+                {
+                    case Response.CreateRoom:
+                        var createRoomResp = JsonConvert.DeserializeObject<Protocol.CreateRoomResp>(respStr);
+                        GameManager.Instance.CreateRoomRes(createRoomResp);
+                        break;
+                    case Protocol.Response.JoinRoom:
+                        break;
+                    case Protocol.Response.RoomInit:
+                        break;
+                    case Protocol.Response.CallLargeTichu:
+                        break;
+                    case Protocol.Response.DistributeAllCard:
+                        break;
+                    case Protocol.Response.StartGame:
+                        break;
+                    case Protocol.Response.CallTichu:
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            yield return null;
+        }
     }
 
     public void Connect()
@@ -56,57 +102,27 @@ public class Network : MonoBehaviour {
     }
 
     public void SendMessage(object value)
-    {        
+    {
         ws.Send(JsonConvert.SerializeObject(value));
     }
 
-    private static void NetworkOpen(object sender, EventArgs e)
+    private void NetworkOpen(object sender, EventArgs e)
     {
-        
-    }
-    
-    private static void NetworkOnMessage(object sender, MessageEventArgs e)
-    {
-        var resp = JsonConvert.DeserializeObject<Protocol.BaseResp>(e.Data);
-
-        switch ((Protocol.Response)resp.ResponseType)
-        {
-            case Protocol.Response.CreateRoom:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.JoinRoom:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.RoomInit:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.CallLargeTichu:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.DistributeAllCard:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.StartGame:
-                Debug.Log(e.Data);
-                break;
-            case Protocol.Response.CallTichu:
-                Debug.Log(e.Data);
-                break;
-                
-            default:
-                Debug.Log(e.Data);
-                break;
-        }
     }
 
-    private static void NetworkOnError(object sender, ErrorEventArgs e)
+    private void NetworkOnMessage(object sender, MessageEventArgs e)
+    {
+        Debug.Log(e.Data);
+        responseQueue.Enqueue(e.Data);
+    }
+
+    private void NetworkOnError(object sender, ErrorEventArgs e)
     {
         //TODO error 
     }
 
-    private static void NetworkOnClose(object sender, CloseEventArgs e)
+    private void NetworkOnClose(object sender, CloseEventArgs e)
     {
         //TODO error 
     }
-
 }
