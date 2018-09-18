@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Protocol;
 
 public enum RutineState
 {
@@ -65,6 +66,9 @@ public class GameManager : MonoBehaviour {
     public WishCardPopup m_wishCardPopup;
     public GivePointPopup m_givePointPopup;
     public GameObject m_askMultiPopup;
+    public GameObject m_CreateRoomPopup;
+    public GameObject m_JoinRoomPopup;
+    public WaitUserPopup m_wiatUserPopup;
 
     public bool m_endRound = false;
 
@@ -73,10 +77,13 @@ public class GameManager : MonoBehaviour {
     public Text m_scoreBoardTeamAPoint;
     public Text m_scoreBoardTeamBPoint;
 
+    string m_roomCode;
+
     bool m_isExchange = false;
     bool m_isAllReady = false;
     bool m_isClosePointPopup = false;
     bool m_isMultiPlay = false;
+    bool m_isStartMultiPlay = false;
 
     int m_nTeamAPoint = 0;
     int m_nTeamBPoint = 0;
@@ -142,7 +149,6 @@ public class GameManager : MonoBehaviour {
         {
             m_tichuBtn.Inactive();
         }
-        
     }
 
     public void InitRound()
@@ -180,7 +186,53 @@ public class GameManager : MonoBehaviour {
     // Use this for initialization
     void Start () {
         //코루틴을 만든다.
-        StartCoroutine("TichuRoutine");
+        StartCoroutine(SelectSingleOrMulti());
+        //StartCoroutine("TichuRoutine");
+    }
+
+    public void ChangeRoomCode(string roomCode)
+    {
+        m_roomCode = roomCode;
+    }
+
+    IEnumerator SelectSingleOrMulti()
+    {
+        yield return StartCoroutine(WaitSelectMulti());
+
+        if (!m_isMultiPlay)
+        {
+            StartCoroutine(TichuRoutine());
+        }
+        else
+        {
+            StartCoroutine(ActiveMulti());
+        }
+
+        //yield return null;
+    }
+
+    IEnumerator ActiveMulti()
+    {
+        //서버와 연결을 해두고
+        //방 생성과 방 입장을 해보자.
+        m_CreateRoomPopup.SetActive(true);
+        Network.Instance.Connect();
+
+        while (!m_isStartMultiPlay)
+        {
+            yield return null;
+        }
+    }
+
+    IEnumerator WaitJoinUser()
+    {
+        yield return null;
+    }
+
+    public void JoinRoomPopup()
+    {
+        m_CreateRoomPopup.SetActive(false);
+        m_JoinRoomPopup.SetActive(true);
     }
 
     IEnumerator WaitSelectMulti()
@@ -207,13 +259,13 @@ public class GameManager : MonoBehaviour {
 
     IEnumerator TichuRoutine()
     {
-        //메인 루틴 들어가기 전에 멀티 할지를 물어보자.
-        yield return StartCoroutine(WaitSelectMulti());
+        ////메인 루틴 들어가기 전에 멀티 할지를 물어보자.
+        //yield return StartCoroutine(WaitSelectMulti());
 
-        if (m_isMultiPlay)
-        {
-            yield break;
-        }
+        //if (m_isMultiPlay)
+        //{
+        //    yield break;
+        //}
 
         //다시 생각을 해보자.
         //일단 순서도 흐름대로 만들다.
@@ -860,4 +912,154 @@ public class GameManager : MonoBehaviour {
 
         return false;
     }
+
+    #region 네트워크 요청 함수
+
+    //네트워크 함수들?
+    public void CreateRoomBtn()
+    {
+        CreateRoomReq req = new CreateRoomReq();
+        req.protocolType = (int)Request.CreateRoom;
+        Network.Instance.SendMessage(req);
+    }
+
+    #region 방 입장 함수
+    public void JoinRoomBtn()
+    {
+        //리퀘스트 함수 선언
+        JoinRoomReq req = new JoinRoomReq();
+        req.protocolType = (int)Request.JoinRoom;
+        //방제가 들어가야 된다.
+        req.roomCode = m_roomCode;
+        Network.Instance.SendMessage(req);
+    }
+    #endregion
+
+    #region 콜 라지티츄 함수
+    //public void CallLargeTichuBtn(bool isCall)
+    //{
+    //    CallLargeTichuReq req = new CallLargeTichuReq();
+    //    req.IsCall = isCall;
+    //    Network.Instance.SendMessage(req);
+    //}
+    #endregion
+
+    #region 콜 티츄 함수
+    //public void CallTichuBtn(bool isCall)
+    //{
+    //    CallTichuReq req = new CallTichuReq();
+    //    Network.Instance.SendMessage(req);
+    //}
+    #endregion
+
+    #region 카드 교환 함수
+    //public void ChangeCardBtn()
+    //{
+    //    ChangeCardReq req = new ChangeCardReq();
+    //    req.Change.Add(m_players[0].GetLeftPlayer().PlayerIdx, cardIdx);
+    //    req.Change.Add(m_players[0].GetTeamPlayer().PlayerIdx, cardIdx);
+    //    req.Change.Add(m_players[0].GetRightPlayer().PlayerIdx, cardIdx);
+    //    Network.Instance.SendMessage(req);
+    //}
+    #endregion
+
+    #region 폭탄 사용 버튼
+    //public void UseBoomBtn()
+    //{
+    //    UseBoomReq req = new UseBoomReq();
+    //    req.Add(cardIdx);
+    //    req.Add(cardIdx);
+    //    req.Add(cardIdx);
+    //    req.Add(cardIdx);
+    //    req.Add(cardIdx);
+    //    Network.Instance.SendMessage(req);
+    //}
+    #endregion
+
+    #endregion
+
+
+    #region 네트워크 응답 함수
+
+    #region 방 생성 응답 함수
+    public void CreateRoomRes(Protocol.CreateRoomResp res)
+    {
+        string roomCode = res.roomCode;
+
+        m_wiatUserPopup.gameObject.SetActive(true);
+        m_wiatUserPopup.SetRoomCode(roomCode);
+
+    }
+    #endregion
+
+    #region 방 입장 응답 함수
+    public void JoinRoomRes(Protocol.JoinRoomResp res)
+    {
+        int userCount = res.userCount;
+
+        m_wiatUserPopup.gameObject.SetActive(true);
+        m_wiatUserPopup.SetRoomCode(m_roomCode);
+        m_wiatUserPopup.SetUserCount(userCount);
+    }
+    #endregion
+
+    #region 게임 시작 응답 함수
+    //사람이 4명이 차면 자동으로 바로 게임이 시작된다.
+    //public void StartGameRes(Protocol.StartGameResp res)
+    //{
+    //    playerSize = res.CurrentActivePlayer;
+    //    m_players = res.models.player;
+
+    //    StartCoroutine(TichuRoutine());
+    //}
+    #endregion
+
+    #region 1차 분배 응답 함수
+    //게임 시작이 되면 바로 1차 분배를 한다.?
+    //public void RoomInitRes(Protocol.RoomInitResp res)
+    //{
+    //    int teamIdx = res.models.team; //팀 인덱스?
+    //    m_players = res.models.player; //유저 정보?
+    //    StartCoroutine(ChooseLargeTichu());
+    //}
+    #endregion
+
+    #region 2차 분배 응답 함수
+    //public void DistributeAllCardRes(Protocol.DistributeAllCardResp res)
+    //{
+    //    m_players = res.models.player;
+
+    //    //교환 단계로 넘어가자.
+    //}
+    #endregion
+
+    #region 콜 라지 티츄 응답 함수
+    //public void CallLargeTichuRes(Protocol.CallLargeTichuResp res)
+    //{
+    //    for (int i = 0; i < res.CallTichu.count; ++i)
+    //    {
+    //        if (res.CallTichu[i] == 1)
+    //        {
+    //            m_players[i].m_isCallLargeTichu = true;
+    //        }
+    //    }
+
+    //    //2차 분배를 합니다.
+    //}
+    #endregion
+
+    #region
+    //public void CallTichuRes(Protocol.CallTichuResp res)
+    //{
+    //    for (int i = 0; i < res.CallTichu.count; ++i)
+    //    {
+    //        if (res.CallTichu[i] == 1)
+    //        {
+    //            m_players[i].CallTichu();
+    //        }
+    //    }
+    //}
+    #endregion
+
+    #endregion
 }
