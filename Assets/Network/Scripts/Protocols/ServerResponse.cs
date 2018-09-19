@@ -46,6 +46,7 @@ namespace Protocol
     public class DistributeAllCardResp : BaseResp
     {
         public Player player;
+        public Dictionary<int, int> callTichu;
     }
 
     public class StartGameResp : BaseResp
