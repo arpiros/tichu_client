@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Protocol;
 
-public enum RutineState
+public enum _RutineState
 {
     FirstDivisionState,
     ChooseLargeTichuState,
@@ -15,17 +15,17 @@ public enum RutineState
     CardMoveState,
 }
 
-public class GameManager : MonoBehaviour {
+public class GameManagerSingle : MonoBehaviour {
 
-    private static GameManager _instance = null;
+    private static GameManagerSingle _instance = null;
 
-    public static GameManager Instance
+    public static GameManagerSingle Instance
     {
         get
         {
             if (_instance == null)
             {
-                _instance = FindObjectOfType(typeof(GameManager)) as GameManager;
+                _instance = FindObjectOfType(typeof(GameManagerSingle)) as GameManagerSingle;
 
                 if (_instance == null)
                 {
@@ -39,7 +39,7 @@ public class GameManager : MonoBehaviour {
 
     public Player playerPrefab;
 
-    public Player m_player;
+    public Player m_player = new Player();
     public CardDeck m_cardDeck;
     const int playerSize = 4;
     public Player[] m_players = new Player[playerSize];
@@ -287,8 +287,7 @@ public class GameManager : MonoBehaviour {
         {
             //1차 카드 분배
             //서버에서 1차분배가 되고 온다.
-            //기존 함수를 수정해서 분배만 시키자.
-            yield return StartCoroutine(FirstDivision());
+            //yield return StartCoroutine(FirstDivision());
 
             //나누는 부분은 코루틴을 할 필요가 없다.
             //나누어지고 카드가 이동하는 부분만 코루틴으로 만들자.
@@ -340,59 +339,41 @@ public class GameManager : MonoBehaviour {
         time += Time.deltaTime;
     }
 
-    IEnumerator FirstDivision()
-    {
-        yield return StartCoroutine(m_player.DivisionCardMove(m_cardDeck.transform.position, true));
-        m_player.ArrangementCard();
-        m_player.SetCardCount();
-
-        if (m_player.CheckBomb())
-        {
-            m_bombBtn.Active();
-        }
-        else
-        {
-            m_bombBtn.Inactive();
-        }
-
-        m_rutineState = RutineState.ChooseLargeTichuState;
-    }
-
     IEnumerator ChooseLargeTichu()
     {
         m_LargeTichuPopup.gameObject.SetActive(true);
 
         while(m_rutineState != RutineState.SecondDivisionState)
         {
-            //for (int i = 0; i < playerSize; ++i)
-            //{
-            //    m_isAllReady = true;
+            for (int i = 0; i < playerSize; ++i)
+            {
+                m_isAllReady = true;
 
-            //    if (!m_players[i].IsChooseLargeTichu())
-            //    {
-            //        m_isAllReady = false;
-            //        break;
-            //    }
-            //}
+                if (!m_players[i].IsChooseLargeTichu())
+                {
+                    m_isAllReady = false;
+                    break;
+                }
+            }
 
-            //if (m_isAllReady)
-            //{
-            //    m_rutineState = RutineState.SecondDivisionState;
-            //    m_LargeTichuPopup.gameObject.SetActive(false);
-            //}
+            if (m_isAllReady)
+            {
+                m_rutineState = RutineState.SecondDivisionState;
+                m_LargeTichuPopup.gameObject.SetActive(false);
+            }
 
             yield return null;
         }
 
-        ////2차 분배
-        //StartCoroutine(SecondDivision());
+        //2차 분배
+        StartCoroutine(SecondDivision());
 
-        //m_rutineState = RutineState.ExchangeState;
+        m_rutineState = RutineState.ExchangeState;
 
-        //m_ExchangeUi.View();
-        //m_exchangeBtn.gameObject.SetActive(true);
-        //m_drawBtn.Hide();
-        //m_passBtn.Hide();
+        m_ExchangeUi.View();
+        m_exchangeBtn.gameObject.SetActive(true);
+        m_drawBtn.Hide();
+        m_passBtn.Hide();
     }
 
     IEnumerator WaitingCardExchange()
@@ -562,32 +543,58 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+    IEnumerator FirstDivision()
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                CardData cardData = m_cardDeck.GetCard(count++);
+
+                m_players[j].AddCard(cardData);
+                cardData.SetOwnerPlayer(m_players[j]);
+            }
+        }
+
+        for (int i = 0; i < 4; ++i)
+        {
+            yield return StartCoroutine(m_players[i].DivisionCardMove(m_cardDeck.transform.position, true));
+            m_players[i].ArrangementCard();
+            m_players[i].SetCardCount();
+        }
+
+        if (m_players[0].CheckBomb())
+        {
+            m_bombBtn.Active();
+        }
+        else
+        {
+            m_bombBtn.Inactive();
+        }
+
+        m_rutineState = RutineState.ChooseLargeTichuState;
+    }
 
     IEnumerator SecondDivision()
     {
-        //int size = m_cardDeck.GetDeckSize();
-        //for (; count < size; ++count)
-        //{
-        //    CardData cardData = m_cardDeck.GetCard(count);
+        int size = m_cardDeck.GetDeckSize();
+        for (; count < size; ++count)
+        {
+            CardData cardData = m_cardDeck.GetCard(count);
 
-        //    m_players[count % 4].AddCard(m_cardDeck.GetCard(count));
-        //    cardData.SetOwnerPlayer(m_players[count % 4]);
-        //}
+            m_players[count % 4].AddCard(m_cardDeck.GetCard(count));
+            cardData.SetOwnerPlayer(m_players[count % 4]);
+        }
 
-        //for (int i = 0; i < 4; ++i)
-        //{
-        //    yield return StartCoroutine(m_players[i].DivisionCardMove(m_cardDeck.transform.position, false));
-        //    m_players[i].ArrangementCard();
-        //    m_players[i].SetOriginTransform();
-        //    m_players[i].SetCardCount();
-        //}
+        for (int i = 0; i < 4; ++i)
+        {
+            yield return StartCoroutine(m_players[i].DivisionCardMove(m_cardDeck.transform.position, false));
+            m_players[i].ArrangementCard();
+            m_players[i].SetOriginTransform();
+            m_players[i].SetCardCount();
+        }
 
-        yield return StartCoroutine(m_player.DivisionCardMove(m_cardDeck.transform.position, false));
-        m_player.ArrangementCard();
-        m_player.SetOriginTransform();
-        m_player.SetCardCount();
-
-        if (m_player.CheckBomb())
+        if (m_players[0].CheckBomb())
         {
             m_bombBtn.Active();
         }
@@ -931,14 +938,12 @@ public class GameManager : MonoBehaviour {
     #endregion
 
     #region 콜 라지티츄 함수
-    public void CallLargeTichuBtn(bool isCall)
-    {
-        m_LargeTichuPopup.gameObject.SetActive(false);
-
-        CallLargeTichuReq req = new CallLargeTichuReq();
-        req.isCall = (isCall)? 1: 0;
-        Network.Instance.SendMessage(req);
-    }
+    //public void CallLargeTichuBtn(bool isCall)
+    //{
+    //    CallLargeTichuReq req = new CallLargeTichuReq();
+    //    req.IsCall = isCall;
+    //    Network.Instance.SendMessage(req);
+    //}
     #endregion
 
     #region 콜 티츄 함수
@@ -982,7 +987,6 @@ public class GameManager : MonoBehaviour {
     public void CreateRoomRes(Protocol.CreateRoomResp res)
     {
         string roomCode = res.roomCode;
-        m_roomCode = roomCode;
 
         m_wiatUserPopup.gameObject.SetActive(true);
         m_wiatUserPopup.SetRoomCode(roomCode);
@@ -1001,7 +1005,7 @@ public class GameManager : MonoBehaviour {
     #endregion
 
     #region 게임 시작 응답 함수
-    //2차 분배 이후에 게임이 시작된다.
+    //사람이 4명이 차면 자동으로 바로 게임이 시작된다.
     //public void StartGameRes(Protocol.StartGameResp res)
     //{
     //    playerSize = res.CurrentActivePlayer;
@@ -1015,67 +1019,15 @@ public class GameManager : MonoBehaviour {
     //게임 시작이 되면 바로 1차 분배를 한다.?
     public void RoomInitRes(Protocol.RoomInitResp res)
     {
-        m_wiatUserPopup.gameObject.SetActive(false);
-        m_CreateRoomPopup.gameObject.SetActive(false);
-        m_JoinRoomPopup.gameObject.SetActive(false);
+        //int teamidx = res.team;
 
-        //m_players[0].SetPlayers(ref m_players[1], ref m_players[2], ref m_players[3]);
-        //m_players[1].SetPlayers(ref m_players[2], ref m_players[3], ref m_players[0]);
-        //m_players[2].SetPlayers(ref m_players[3], ref m_players[0], ref m_players[1]);
-        //m_players[3].SetPlayers(ref m_players[0], ref m_players[1], ref m_players[2]);
-
-        //난 무조건 player 0가 되어야 된다.
-        m_players[0].TeamID = res.team.teamNumber;
-        m_players[0].PlayerIdx = res.player.index;
-
-        m_player = m_players[0];
-
-        //숫자에 따라서 playerIndex를 지정해주자.
-        switch(res.player.index)
-        {
-            case 0:
-                m_players[1].TeamID = 1;
-                m_players[2].TeamID = 0;
-                m_players[3].TeamID = 1;
-                m_players[1].PlayerIdx = 1;
-                m_players[2].PlayerIdx = 2;
-                m_players[3].PlayerIdx = 3;
-                break;
-            case 1:
-                m_players[1].TeamID = 0;
-                m_players[2].TeamID = 1;
-                m_players[3].TeamID = 0;
-                m_players[1].PlayerIdx = 2;
-                m_players[2].PlayerIdx = 3;
-                m_players[3].PlayerIdx = 0;
-                break;
-            case 2:
-                m_players[1].TeamID = 1;
-                m_players[2].TeamID = 0;
-                m_players[3].TeamID = 1;
-                m_players[1].PlayerIdx = 3;
-                m_players[2].PlayerIdx = 0;
-                m_players[3].PlayerIdx = 1;
-                break;
-            case 3:
-                m_players[1].TeamID = 0;
-                m_players[2].TeamID = 1;
-                m_players[3].TeamID = 0;
-                m_players[1].PlayerIdx = 0;
-                m_players[2].PlayerIdx = 1;
-                m_players[3].PlayerIdx = 2;
-                break;
-        }
+        m_player.TeamID = res.team.teamNumber;
 
         if (m_player.TeamID == 0)
         {
             //0이면 A
             //1이면 B로 하자
             m_nTeamAPoint = res.team.TotalScore;
-        }
-        else
-        {
-            m_nTeamBPoint = res.team.TotalScore;
         }
 
         m_player.PlayerIdx = res.player.index;
@@ -1087,59 +1039,33 @@ public class GameManager : MonoBehaviour {
                 res.player.CardList[i].m_nCardValue));
         }
 
-        m_players[1].SetCardCount(8);
-        m_players[2].SetCardCount(8);
-        m_players[3].SetCardCount(8);
-
         StartCoroutine(TichuRoutine());
         //StartCoroutine(ChooseLargeTichu());
     }
     #endregion
 
     #region 2차 분배 응답 함수
-    public void DistributeAllCardRes(Protocol.DistributeAllCardResp res)
-    {
-        if (m_player.PlayerIdx == res.player.index)
-        {
-            for (int i = 0; i < res.player.CardList.Count; ++i)
-            {
-                m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
-                    (CARD_COLOR)res.player.CardList[i].m_eCardColor,
-                    res.player.CardList[i].m_nCardValue));
-            }
-        }
-        m_rutineState = RutineState.SecondDivisionState;
+    //public void DistributeAllCardRes(Protocol.DistributeAllCardResp res)
+    //{
+    //    m_players = res.models.player;
 
-        //교환 단계로 넘어가자.
-        StartCoroutine(SecondDivision());
-
-        m_rutineState = RutineState.ExchangeState;
-
-        m_ExchangeUi.View();
-        m_exchangeBtn.gameObject.SetActive(true);
-        m_drawBtn.Hide();
-        m_passBtn.Hide();
-    }
+    //    //교환 단계로 넘어가자.
+    //}
     #endregion
 
     #region 콜 라지 티츄 응답 함수
-    public void CallLargeTichuRes(Protocol.CallLargeTichuResp res)
-    {
-        for (int i = 0; i < playerSize; ++i)
-        {
-            for (int j = 0; j <playerSize; ++j)
-            {
-                if (m_players[i].PlayerIdx == j)
-                {
-                    m_players[i].SetLargeTicuh(res.callTichu[j]);
-                    break;
-                }
-            }
-        }
+    //public void CallLargeTichuRes(Protocol.CallLargeTichuResp res)
+    //{
+    //    for (int i = 0; i < res.CallTichu.count; ++i)
+    //    {
+    //        if (res.CallTichu[i] == 1)
+    //        {
+    //            m_players[i].m_isCallLargeTichu = true;
+    //        }
+    //    }
 
-        //2차 분배?
-        //서버에서 올꺼다.
-    }
+    //    //2차 분배를 합니다.
+    //}
     #endregion
 
     #region

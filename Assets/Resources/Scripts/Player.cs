@@ -37,6 +37,7 @@ public class Player : MonoBehaviour {
     protected SelectCard m_selectedCard = new SelectCard();
     protected List<CardData> m_eatCard = new List<CardData>();
     protected CardData[] m_exchagnedCard = new CardData[3];
+    protected List<CardData> m_myCardIdxList = new List<CardData>();
 
     protected List<CardData> m_bombCard = new List<CardData>();
     protected List<CardData> m_strightBomCard = new List<CardData>();
@@ -181,6 +182,11 @@ public class Player : MonoBehaviour {
         }
     }
 
+    public virtual void SetCardCount(int count)
+    {
+        m_cardCountText.text = count.ToString() + "장";
+    }
+
     public virtual void SetCardCount()
     {
         m_cardCountText.text = m_myCard.Count.ToString() + "장";
@@ -226,6 +232,9 @@ public class Player : MonoBehaviour {
 
     public void AddCard(CardData cardData)
     {
+        cardData.SetOwnerPlayer(this);
+        cardData.SetOwnerPlayerCardIdx(m_myCard.Count);
+
         m_myCard.Add(cardData);
 
         if (cardData.type == CARD_TYPE.PHOENIX)
@@ -926,6 +935,26 @@ public class Player : MonoBehaviour {
         return m_isChooseLargeTichu;
     }
 
+    public void SetLargeTicuh(int isCall)
+    {
+        if (isCall == 1)
+        {
+            m_isCallLargeTichu = true;
+
+            m_isCallTichu = false;
+
+            ////스몰 티츄 버튼을 없애자.
+            //GameManager.Instance.TichuBtnEnabled(false);
+
+            m_tichu.gameObject.SetActive(true);
+            m_tichu.sprite = m_grandTichuIcon;
+        }
+        else
+        {
+            m_isCallLargeTichu = false;
+        }
+    }
+
     public void SuccesFirst(bool isSucces)
     {
         //1등으로 나는데 성공했다.!
@@ -972,6 +1001,8 @@ public class Player : MonoBehaviour {
 
         m_tichu.gameObject.SetActive(true);
         m_tichu.sprite = m_grandTichuIcon;
+
+        GameManager.Instance.CallLargeTichuBtn(true);
     }
 
     //라지티츄를 안했다.
@@ -979,6 +1010,8 @@ public class Player : MonoBehaviour {
     {
         m_isChooseLargeTichu = true;
         m_isCallLargeTichu = false;
+
+        GameManager.Instance.CallLargeTichuBtn(false);
     }
 
     virtual public IEnumerator ChooseEatDragon()

@@ -69,12 +69,20 @@ public class Network : MonoBehaviour
                         GameManager.Instance.CreateRoomRes(createRoomResp);
                         break;
                     case Protocol.Response.JoinRoom:
+                        var joinRoomResp = JsonConvert.DeserializeObject<Protocol.JoinRoomResp>(respStr);
+                        GameManager.Instance.JoinRoomRes(joinRoomResp);
                         break;
                     case Protocol.Response.RoomInit:
+                        var roomInitResp = JsonConvert.DeserializeObject<Protocol.RoomInitResp>(respStr);
+                        GameManager.Instance.RoomInitRes(roomInitResp);
                         break;
                     case Protocol.Response.CallLargeTichu:
+                        var callLargeTichuResp = JsonConvert.DeserializeObject<Protocol.CallLargeTichuResp>(respStr);
+                        GameManager.Instance.CallLargeTichuRes(callLargeTichuResp);
                         break;
                     case Protocol.Response.DistributeAllCard:
+                        var distirbuteAllCardRes = JsonConvert.DeserializeObject<Protocol.DistributeAllCardResp>(respStr);
+                        GameManager.Instance.DistributeAllCardRes(distirbuteAllCardRes);
                         break;
                     case Protocol.Response.StartGame:
                         break;

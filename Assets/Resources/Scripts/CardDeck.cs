@@ -114,6 +114,29 @@ public class CardDeck : MonoBehaviour {
         return m_cardDeck[index];
     }
 
+    public CardData GetCard(CARD_TYPE type, CARD_COLOR color, int value)
+    {
+        if (type == CARD_TYPE.NONE)
+        {
+            if (value == 1)
+            {
+                value = 14;
+            }
+
+            //숫자 카드다
+            CardData findItem = m_cardDeck.Find(item => item.color == color && item.value == value);
+
+            return findItem;
+        }
+        else
+        {
+            //특수 카드다.
+            CardData findItem = m_cardDeck.Find(item => item.type == type);
+
+            return findItem;
+        }
+    }
+
     public int GetDeckSize()
     {
         return m_cardDeck.Count;

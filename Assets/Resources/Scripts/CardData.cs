@@ -63,6 +63,8 @@ public class CardData : MonoBehaviour
 
     int m_siblingIdx = 0;
 
+    protected int m_ownerPlayerCardIdx;
+
     private void Awake()
     {
         valueMap = new Dictionary<string, float>();
@@ -121,6 +123,8 @@ public class CardData : MonoBehaviour
         Hide(false);
         Flip(true);
         m_gray.SetActive(false);
+        m_siblingIdx = 0;
+        m_ownerPlayerCardIdx = 0;
     }
 
     public void SetSortingRayer(int x)
@@ -232,6 +236,11 @@ public class CardData : MonoBehaviour
     public bool IsSelected()
     {
         return m_bIsSelect;
+    }
+
+    public void SetOwnerPlayerCardIdx(int index)
+    {
+        m_ownerPlayerCardIdx = index;
     }
 
     public void OnMouseDown()
