@@ -1127,13 +1127,10 @@ public class GameManager : MonoBehaviour {
     {
         for (int i = 0; i < playerSize; ++i)
         {
-            for (int j = 0; j <playerSize; ++j)
+            if (res.callTichu.ContainsKey(m_players[i].PlayerIdx))
             {
-                if (m_players[i].PlayerIdx == j)
-                {
-                    m_players[i].SetLargeTicuh(res.callTichu[j]);
-                    break;
-                }
+                m_players[i].SetLargeTicuh(res.callTichu[m_players[i].PlayerIdx]);
+                break;
             }
         }
 

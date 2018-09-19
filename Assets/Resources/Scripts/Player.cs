@@ -937,7 +937,7 @@ public class Player : MonoBehaviour {
 
     public void SetLargeTicuh(int isCall)
     {
-        if (isCall == 1)
+        if (isCall > 0)
         {
             m_isCallLargeTichu = true;
 
