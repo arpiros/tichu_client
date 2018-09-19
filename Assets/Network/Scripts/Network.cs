@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Protocol;
 using UnityEngine;
@@ -83,6 +84,11 @@ public class Network : MonoBehaviour
                     default:
                         break;
                 }
+            }
+
+            if (responseQueue.Count > 0)
+            {
+                responseQueue.Dequeue();    
             }
 
             yield return null;
