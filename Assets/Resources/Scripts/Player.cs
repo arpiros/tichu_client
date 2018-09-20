@@ -799,6 +799,8 @@ public class Player : MonoBehaviour {
 
         m_tichu.gameObject.SetActive(true);
         m_tichu.sprite = m_tichuIcon;
+
+        GameManager.Instance.CallTichuBtn();
     }
 
     virtual public IEnumerator CardExchange(float deltaTime = 0.5f)
@@ -935,9 +937,9 @@ public class Player : MonoBehaviour {
         return m_isChooseLargeTichu;
     }
 
-    public void SetLargeTicuh(int isCall)
+    public void SetTichu(int isCall)
     {
-        if (isCall > 0)
+        if (isCall == 2)
         {
             m_isCallLargeTichu = true;
 
@@ -948,6 +950,14 @@ public class Player : MonoBehaviour {
 
             m_tichu.gameObject.SetActive(true);
             m_tichu.sprite = m_grandTichuIcon;
+        }
+        else if (isCall == 1)
+        {
+            m_isCallTichu = true;
+            GameManager.Instance.TichuBtnEnabled(false);
+
+            m_tichu.gameObject.SetActive(true);
+            m_tichu.sprite = m_tichuIcon;
         }
         else
         {

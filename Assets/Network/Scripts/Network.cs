@@ -81,12 +81,14 @@ public class Network : MonoBehaviour
                         GameManager.Instance.CallLargeTichuRes(callLargeTichuResp);
                         break;
                     case Protocol.Response.DistributeAllCard:
-                        var distirbuteAllCardRes = JsonConvert.DeserializeObject<Protocol.DistributeAllCardResp>(respStr);
-                        GameManager.Instance.DistributeAllCardRes(distirbuteAllCardRes);
+                        var distirbuteAllCardResp = JsonConvert.DeserializeObject<Protocol.DistributeAllCardResp>(respStr);
+                        GameManager.Instance.DistributeAllCardRes(distirbuteAllCardResp);
                         break;
                     case Protocol.Response.StartGame:
                         break;
                     case Protocol.Response.CallTichu:
+                        var callTichuResp = JsonConvert.DeserializeObject<Protocol.CallTichuResp>(respStr);
+                        GameManager.Instance.CallTichuRes(callTichuResp);
                         break;
 
                     default:

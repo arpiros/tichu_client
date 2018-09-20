@@ -290,9 +290,6 @@ public class GameManager : MonoBehaviour {
             //기존 함수를 수정해서 분배만 시키자.
             yield return StartCoroutine(FirstDivision());
 
-            //나누는 부분은 코루틴을 할 필요가 없다.
-            //나누어지고 카드가 이동하는 부분만 코루틴으로 만들자.
-
             //라지 티츄 결정하는 팝업창
             yield return StartCoroutine(ChooseLargeTichu());
 
@@ -364,35 +361,8 @@ public class GameManager : MonoBehaviour {
 
         while(m_rutineState != RutineState.SecondDivisionState)
         {
-            //for (int i = 0; i < playerSize; ++i)
-            //{
-            //    m_isAllReady = true;
-
-            //    if (!m_players[i].IsChooseLargeTichu())
-            //    {
-            //        m_isAllReady = false;
-            //        break;
-            //    }
-            //}
-
-            //if (m_isAllReady)
-            //{
-            //    m_rutineState = RutineState.SecondDivisionState;
-            //    m_LargeTichuPopup.gameObject.SetActive(false);
-            //}
-
             yield return null;
         }
-
-        ////2차 분배
-        //StartCoroutine(SecondDivision());
-
-        //m_rutineState = RutineState.ExchangeState;
-
-        //m_ExchangeUi.View();
-        //m_exchangeBtn.gameObject.SetActive(true);
-        //m_drawBtn.Hide();
-        //m_passBtn.Hide();
     }
 
     IEnumerator WaitingCardExchange()
@@ -402,16 +372,16 @@ public class GameManager : MonoBehaviour {
 
         while (!m_isExchange)
         {
-            m_isAllReady = true;
+            //m_isAllReady = true;
 
-            for (int i = 0; i < playerSize; ++i)
-            {
-                if (!m_players[i].IsExchagne())
-                {
-                    m_isAllReady = false;
-                    break;
-                }
-            }
+            //for (int i = 0; i < playerSize; ++i)
+            //{
+            //    if (!m_players[i].IsExchagne())
+            //    {
+            //        m_isAllReady = false;
+            //        break;
+            //    }
+            //}
 
             yield return null;
         }
@@ -524,21 +494,32 @@ public class GameManager : MonoBehaviour {
 
     public void CardExchangeBtn()
     {
-        StartCoroutine(CardExchange());
+        if (m_player.IsExchagne())
+        {
+            ChangeCardBtn();
+            //StartCoroutine(CardExchange());
+        }
     }
 
     public IEnumerator CardExchange()
     {
-        if (!m_isAllReady)
+        //if (!m_isAllReady)
+        //{
+        //    yield break;
+        //}
+
+        while (!m_isAllReady)
         {
-            yield break;
+            yield return null;
         }
 
         //카드를 서로 교환한다.
-        for (int i = 0; i < playerSize; ++i)
-        {
-            yield return StartCoroutine(m_players[i].CardExchange());
-        }
+        //for (int i = 0; i < playerSize; ++i)
+        //{
+        //    yield return StartCoroutine(m_players[i].CardExchange());
+        //}
+
+        yield return StartCoroutine(m_player.CardExchange());
 
         m_players[0].ViewExchangeCard();
 
@@ -561,7 +542,6 @@ public class GameManager : MonoBehaviour {
             m_bombBtn.Inactive();
         }
     }
-
 
     IEnumerator SecondDivision()
     {
@@ -942,22 +922,23 @@ public class GameManager : MonoBehaviour {
     #endregion
 
     #region 콜 티츄 함수
-    //public void CallTichuBtn(bool isCall)
-    //{
-    //    CallTichuReq req = new CallTichuReq();
-    //    Network.Instance.SendMessage(req);
-    //}
+    public void CallTichuBtn()
+    {
+        CallTichuReq req = new CallTichuReq();
+        Network.Instance.SendMessage(req);
+    }
     #endregion
 
     #region 카드 교환 함수
-    //public void ChangeCardBtn()
-    //{
-    //    ChangeCardReq req = new ChangeCardReq();
-    //    req.Change.Add(m_players[0].GetLeftPlayer().PlayerIdx, cardIdx);
-    //    req.Change.Add(m_players[0].GetTeamPlayer().PlayerIdx, cardIdx);
-    //    req.Change.Add(m_players[0].GetRightPlayer().PlayerIdx, cardIdx);
-    //    Network.Instance.SendMessage(req);
-    //}
+    public void ChangeCardBtn()
+    {
+        ChangeCardReq req = new ChangeCardReq();
+
+        req.change.Add(m_player.GetLeftPlayer().PlayerIdx, m_player.GetCardExchangeData(0).GetOwnerPlayerCardIdx());
+        req.change.Add(m_player.GetTemaPlayer().PlayerIdx, m_player.GetCardExchangeData(1).GetOwnerPlayerCardIdx());
+        req.change.Add(m_player.GetRightPlayer().PlayerIdx, m_player.GetCardExchangeData(2).GetOwnerPlayerCardIdx());
+        Network.Instance.SendMessage(req);
+    }
     #endregion
 
     #region 폭탄 사용 버튼
@@ -1002,13 +983,15 @@ public class GameManager : MonoBehaviour {
 
     #region 게임 시작 응답 함수
     //2차 분배 이후에 게임이 시작된다.
-    //public void StartGameRes(Protocol.StartGameResp res)
-    //{
-    //    playerSize = res.CurrentActivePlayer;
-    //    m_players = res.models.player;
+    //4인이 다 교환을 눌리면 해당 패킷이 온다.
+    public void StartGameRes(Protocol.StartGameResp res)
+    {
+        //res.player.
+        //playerSize = res.CurrentActivePlayer;
+        //m_players = res.models.player;
 
-    //    StartCoroutine(TichuRoutine());
-    //}
+        //StartCoroutine(TichuRoutine());
+    }
     #endregion
 
     #region 1차 분배 응답 함수
@@ -1080,8 +1063,7 @@ public class GameManager : MonoBehaviour {
 
         m_player.PlayerIdx = res.player.index;
 
-        for (int i = 0; i < res.player.CardList.Count; ++i)
-        {
+        for (int i = 0; i < res.player.CardList.Count; ++i){
             m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
                 (CARD_COLOR)res.player.CardList[i].m_eCardColor,
                 res.player.CardList[i].m_nCardValue));
@@ -1101,7 +1083,7 @@ public class GameManager : MonoBehaviour {
     {
         if (m_player.PlayerIdx == res.player.index)
         {
-            for (int i = 0; i < res.player.CardList.Count; ++i)
+            for (int i = 8; i < res.player.CardList.Count; ++i)
             {
                 m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
                     (CARD_COLOR)res.player.CardList[i].m_eCardColor,
@@ -1129,7 +1111,7 @@ public class GameManager : MonoBehaviour {
         {
             if (res.callTichu.ContainsKey(m_players[i].PlayerIdx))
             {
-                m_players[i].SetLargeTicuh(res.callTichu[m_players[i].PlayerIdx]);
+                m_players[i].SetTichu(res.callTichu[m_players[i].PlayerIdx]);
                 break;
             }
         }
@@ -1140,16 +1122,17 @@ public class GameManager : MonoBehaviour {
     #endregion
 
     #region
-    //public void CallTichuRes(Protocol.CallTichuResp res)
-    //{
-    //    for (int i = 0; i < res.CallTichu.count; ++i)
-    //    {
-    //        if (res.CallTichu[i] == 1)
-    //        {
-    //            m_players[i].CallTichu();
-    //        }
-    //    }
-    //}
+    public void CallTichuRes(Protocol.CallTichuResp res)
+    {
+        for (int i = 0; i < playerSize; ++i)
+        {
+            if (res.callTichu.ContainsKey(m_players[i].PlayerIdx))
+            {
+                m_players[i].SetTichu(res.callTichu[m_players[i].PlayerIdx]);
+                break;
+            }
+        }
+    }
     #endregion
 
     #endregion

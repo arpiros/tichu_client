@@ -243,6 +243,11 @@ public class CardData : MonoBehaviour
         m_ownerPlayerCardIdx = index;
     }
 
+    public int GetOwnerPlayerCardIdx()
+    {
+        return m_ownerPlayerCardIdx;
+    }
+
     public void OnMouseDown()
     {
         //Debug.Log("Mouse Down");
