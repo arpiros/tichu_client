@@ -85,6 +85,8 @@ public class Network : MonoBehaviour
                         GameManager.Instance.DistributeAllCardRes(distirbuteAllCardResp);
                         break;
                     case Protocol.Response.StartGame:
+                        var startGameResp = JsonConvert.DeserializeObject<Protocol.StartGameResp>(respStr);
+                        GameManager.Instance.StartGameRes(startGameResp);
                         break;
                     case Protocol.Response.CallTichu:
                         var callTichuResp = JsonConvert.DeserializeObject<Protocol.CallTichuResp>(respStr);

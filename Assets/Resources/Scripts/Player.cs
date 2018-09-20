@@ -192,6 +192,16 @@ public class Player : MonoBehaviour {
         m_cardCountText.text = m_myCard.Count.ToString() + "장";
     }
 
+    public void MyCardClear()
+    {
+        for (int i = 0; i < m_myCard.Count; ++i)
+        {
+            m_myCard[i].Init();
+        }
+
+        m_myCard.Clear();
+    }
+
     public bool DrawMajjong()
     {
         return m_bDrawMajjong;

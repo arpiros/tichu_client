@@ -365,6 +365,41 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+    IEnumerator SecondDivision()
+    {
+        //int size = m_cardDeck.GetDeckSize();
+        //for (; count < size; ++count)
+        //{
+        //    CardData cardData = m_cardDeck.GetCard(count);
+
+        //    m_players[count % 4].AddCard(m_cardDeck.GetCard(count));
+        //    cardData.SetOwnerPlayer(m_players[count % 4]);
+        //}
+
+        //for (int i = 0; i < 4; ++i)
+        //{
+        //    yield return StartCoroutine(m_players[i].DivisionCardMove(m_cardDeck.transform.position, false));
+        //    m_players[i].ArrangementCard();
+        //    m_players[i].SetOriginTransform();
+        //    m_players[i].SetCardCount();
+        //}
+
+        yield return StartCoroutine(m_player.DivisionCardMove(m_cardDeck.transform.position, false));
+
+        m_player.ArrangementCard();
+        m_player.SetOriginTransform();
+        m_player.SetCardCount();
+
+        if (m_player.CheckBomb())
+        {
+            m_bombBtn.Active();
+        }
+        else
+        {
+            m_bombBtn.Inactive();
+        }
+    }
+
     IEnumerator WaitingCardExchange()
     {
         //교환전에 카드를 자기자리에 셋팅을 하자
@@ -394,7 +429,7 @@ public class GameManager : MonoBehaviour {
         m_exchangeBtn.gameObject.SetActive(false);
         SetActivePlayBtn(false);
 
-        m_turnPlayer = m_cardDeck.GetmahjongCard().m_ownerPlayer;
+        //m_turnPlayer = m_cardDeck.GetmahjongCard().m_ownerPlayer;
         m_startPlayer = m_turnPlayer;
 
         m_turnPlayer.MyTurn();
@@ -407,6 +442,48 @@ public class GameManager : MonoBehaviour {
         {
             m_passBtn.Hide();
             m_drawBtn.Hide();
+        }
+    }
+
+    public IEnumerator CardExchange()
+    {
+        //if (!m_isAllReady)
+        //{
+        //    yield break;
+        //}
+
+        //while (!m_isAllReady)
+        //{
+        //    yield return null;
+        //}
+
+        //카드를 서로 교환한다.
+        //for (int i = 0; i < playerSize; ++i)
+        //{
+        //    yield return StartCoroutine(m_players[i].CardExchange());
+        //}
+
+        yield return StartCoroutine(m_player.CardExchange());
+
+        m_players[0].ViewExchangeCard();
+
+        //카드를 정리한다.
+        for (int i = 0; i < playerSize; ++i)
+        {
+            m_players[i].clearExchangeData();
+        }
+
+        //더미 소스
+        m_isExchange = true;
+        m_isAllReady = false;
+
+        if (m_players[0].CheckBomb())
+        {
+            m_bombBtn.Active();
+        }
+        else
+        {
+            m_bombBtn.Inactive();
         }
     }
 
@@ -498,82 +575,6 @@ public class GameManager : MonoBehaviour {
         {
             ChangeCardBtn();
             //StartCoroutine(CardExchange());
-        }
-    }
-
-    public IEnumerator CardExchange()
-    {
-        //if (!m_isAllReady)
-        //{
-        //    yield break;
-        //}
-
-        while (!m_isAllReady)
-        {
-            yield return null;
-        }
-
-        //카드를 서로 교환한다.
-        //for (int i = 0; i < playerSize; ++i)
-        //{
-        //    yield return StartCoroutine(m_players[i].CardExchange());
-        //}
-
-        yield return StartCoroutine(m_player.CardExchange());
-
-        m_players[0].ViewExchangeCard();
-
-        //카드를 정리한다.
-        for (int i = 0; i < playerSize; ++i)
-        {
-            m_players[i].clearExchangeData();
-        }
-
-        //더미 소스
-        m_isExchange = true;
-        m_isAllReady = false;
-
-        if (m_players[0].CheckBomb())
-        {
-            m_bombBtn.Active();
-        }
-        else
-        {
-            m_bombBtn.Inactive();
-        }
-    }
-
-    IEnumerator SecondDivision()
-    {
-        //int size = m_cardDeck.GetDeckSize();
-        //for (; count < size; ++count)
-        //{
-        //    CardData cardData = m_cardDeck.GetCard(count);
-
-        //    m_players[count % 4].AddCard(m_cardDeck.GetCard(count));
-        //    cardData.SetOwnerPlayer(m_players[count % 4]);
-        //}
-
-        //for (int i = 0; i < 4; ++i)
-        //{
-        //    yield return StartCoroutine(m_players[i].DivisionCardMove(m_cardDeck.transform.position, false));
-        //    m_players[i].ArrangementCard();
-        //    m_players[i].SetOriginTransform();
-        //    m_players[i].SetCardCount();
-        //}
-
-        yield return StartCoroutine(m_player.DivisionCardMove(m_cardDeck.transform.position, false));
-        m_player.ArrangementCard();
-        m_player.SetOriginTransform();
-        m_player.SetCardCount();
-
-        if (m_player.CheckBomb())
-        {
-            m_bombBtn.Active();
-        }
-        else
-        {
-            m_bombBtn.Inactive();
         }
     }
 
@@ -934,6 +935,8 @@ public class GameManager : MonoBehaviour {
     {
         ChangeCardReq req = new ChangeCardReq();
 
+        req.change = new Dictionary<int, int>();
+
         req.change.Add(m_player.GetLeftPlayer().PlayerIdx, m_player.GetCardExchangeData(0).GetOwnerPlayerCardIdx());
         req.change.Add(m_player.GetTemaPlayer().PlayerIdx, m_player.GetCardExchangeData(1).GetOwnerPlayerCardIdx());
         req.change.Add(m_player.GetRightPlayer().PlayerIdx, m_player.GetCardExchangeData(2).GetOwnerPlayerCardIdx());
@@ -986,11 +989,28 @@ public class GameManager : MonoBehaviour {
     //4인이 다 교환을 눌리면 해당 패킷이 온다.
     public void StartGameRes(Protocol.StartGameResp res)
     {
-        //res.player.
-        //playerSize = res.CurrentActivePlayer;
-        //m_players = res.models.player;
+        if (res.currentActivePlayer != 4)
+        {
+            //게임종료?
+            Application.Quit();
+        }
 
-        //StartCoroutine(TichuRoutine());
+        if (res.player.isMyTurn)
+        {
+            m_turnPlayer = m_player;
+        }
+
+        StartCoroutine(CardExchange());
+
+        //카드 정보를 다시?
+        m_player.MyCardClear();
+
+        for (int i = 0; i < res.player.CardList.Count; ++i)
+        {
+            m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
+                (CARD_COLOR)res.player.CardList[i].m_eCardColor,
+                res.player.CardList[i].m_nCardValue));
+        }
     }
     #endregion
 
@@ -1001,11 +1021,6 @@ public class GameManager : MonoBehaviour {
         m_wiatUserPopup.gameObject.SetActive(false);
         m_CreateRoomPopup.gameObject.SetActive(false);
         m_JoinRoomPopup.gameObject.SetActive(false);
-
-        //m_players[0].SetPlayers(ref m_players[1], ref m_players[2], ref m_players[3]);
-        //m_players[1].SetPlayers(ref m_players[2], ref m_players[3], ref m_players[0]);
-        //m_players[2].SetPlayers(ref m_players[3], ref m_players[0], ref m_players[1]);
-        //m_players[3].SetPlayers(ref m_players[0], ref m_players[1], ref m_players[2]);
 
         //난 무조건 player 0가 되어야 된다.
         m_players[0].TeamID = res.team.teamNumber;
@@ -1081,15 +1096,17 @@ public class GameManager : MonoBehaviour {
     #region 2차 분배 응답 함수
     public void DistributeAllCardRes(Protocol.DistributeAllCardResp res)
     {
-        if (m_player.PlayerIdx == res.player.index)
+        //if (m_player.PlayerIdx == res.player.index)
+        //{
+            
+        //}
+        for (int i = 8; i < res.player.CardList.Count; ++i)
         {
-            for (int i = 8; i < res.player.CardList.Count; ++i)
-            {
-                m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
-                    (CARD_COLOR)res.player.CardList[i].m_eCardColor,
-                    res.player.CardList[i].m_nCardValue));
-            }
+            m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
+                (CARD_COLOR)res.player.CardList[i].m_eCardColor,
+                res.player.CardList[i].m_nCardValue));
         }
+
         m_rutineState = RutineState.SecondDivisionState;
 
         //교환 단계로 넘어가자.
