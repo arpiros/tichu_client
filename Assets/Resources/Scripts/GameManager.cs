@@ -995,7 +995,7 @@ public class GameManager : MonoBehaviour {
             Application.Quit();
         }
 
-        if (res.player.isMyTurn)
+        if (res.currentActivePlayer == m_player.PlayerIdx)
         {
             m_turnPlayer = m_player;
         }
@@ -1003,14 +1003,14 @@ public class GameManager : MonoBehaviour {
         StartCoroutine(CardExchange());
 
         //카드 정보를 다시?
-        m_player.MyCardClear();
-
-        for (int i = 0; i < res.player.CardList.Count; ++i)
-        {
-            m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
-                (CARD_COLOR)res.player.CardList[i].m_eCardColor,
-                res.player.CardList[i].m_nCardValue));
-        }
+//        m_player.MyCardClear();
+//
+//        for (int i = 0; i < res.player.CardList.Count; ++i)
+//        {
+//            m_player.AddCard(m_cardDeck.GetCard((CARD_TYPE)res.player.CardList[i].m_eCardType,
+//                (CARD_COLOR)res.player.CardList[i].m_eCardColor,
+//                res.player.CardList[i].m_nCardValue));
+//        }
     }
     #endregion
 

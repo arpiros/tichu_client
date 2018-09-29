@@ -51,7 +51,7 @@ namespace Protocol
 
     public class StartGameResp : BaseResp
     {
-        public Player player;
+        public List<Card> GainCard; 
         public int currentActivePlayer;
     }
 

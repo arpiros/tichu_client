@@ -137,10 +137,12 @@ public class Network : MonoBehaviour
     private void NetworkOnError(object sender, ErrorEventArgs e)
     {
         //TODO error 
+        Debug.LogError(e.Message);
     }
 
     private void NetworkOnClose(object sender, CloseEventArgs e)
     {
-        //TODO error 
+        //TODO error
+        Debug.LogError(e.Reason);
     }
 }
