@@ -194,10 +194,13 @@ public class Player : MonoBehaviour {
 
     public void MyCardClear()
     {
-        for (int i = 0; i < m_myCard.Count; ++i)
-        {
-            m_myCard[i].Init();
-        }
+        //for (int i = 0; i < m_myCard.Count; ++i)
+        //{
+        //    if (m_myCard[i] != null)
+        //    {
+        //        m_myCard[i].Init();
+        //    }
+        //}
 
         m_myCard.Clear();
     }
@@ -864,10 +867,10 @@ public class Player : MonoBehaviour {
         CardData teamCard = m_teamPlayer.GetCardExchangeData(1);
         CardData rightCard = m_rightPlayer.GetCardExchangeData(0);
 
-        Debug.Log(this.name + "\n" + 
-            "left : " + leftCard.GetColor() + leftCard.valueStr + 
-            " team : " + teamCard.GetColor() + teamCard.valueStr + 
-            " right : " + rightCard.GetColor() + rightCard.valueStr);
+        //Debug.Log(this.name + "\n" + 
+        //    "left : " + leftCard.GetColor() + leftCard.valueStr + 
+        //    " team : " + teamCard.GetColor() + teamCard.valueStr + 
+        //    " right : " + rightCard.GetColor() + rightCard.valueStr);
 
         //다른 플레이어들에게 카드를 받는다.
         m_myCard.Add(leftCard);
